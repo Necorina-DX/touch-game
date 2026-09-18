@@ -190,11 +190,49 @@ function movePlayer() {
     y = nextY;
     player.style.left = x + "px";
     player.style.top = y + "px";
+
+    // ==========================
+    // ドットを食べる
+    // ==========================
+
+    const dots = document.querySelectorAll(".dot");
+    dots.forEach(function(dot) {
+      const dotLeft = dot.offsetLeft;
+      const dotRight = dot.offsetLeft + dot.offsetWidth;
+      const dotTop = dot.offsetTop;
+      const dotBottom = dot.offsetTop + dot.offsetHeight;
+
+      const playerLeft = x;
+      const playerRight = x + playerWidth;
+      const playerTop = y;
+      const playerBottom = y + playerHeight;
+
+      // プレイヤーとドットが重なったら食べる
+      if (
+        playerRight > dotLeft &&
+        playerLeft < dotRight &&
+        playerBottom > dotTop &&
+        playerTop < dotBottom
+      ) {
+        dot.remove();
+      }
+    });
+
+    // ==========================
+    // 全部食べたか確認
+    // ==========================
+
+    if (document.querySelectorAll(".dot").length === 0) {
+      dx = 0;
+      dy = 0;
+      document.getElementById("title").textContent =
+        "CLEAR!";
+    }
   } else {
-    // 壁に当たったら停止
     dx = 0;
     dy = 0;
   }
+
   requestAnimationFrame(movePlayer);
 }
 
