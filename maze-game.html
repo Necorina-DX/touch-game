@@ -139,10 +139,62 @@ const speed = 2;
 // ==========================
 
 function movePlayer() {
-  x += dx;
-  y += dy;
-  player.style.left = x + "px";
-  player.style.top = y + "px";
+  // 次に移動しようとしている位置
+  const nextX = x + dx;
+  const nextY = y + dy;
+
+  // プレイヤーの大きさ
+  const playerWidth = player.offsetWidth;
+  const playerHeight = player.offsetHeight;
+
+  // 次の位置でのプレイヤーの範囲
+  const playerLeft = nextX;
+  const playerRight = nextX + playerWidth;
+  const playerTop = nextY;
+  const playerBottom = nextY + playerHeight;
+  let collision = false;
+
+  // すべての壁を調べる
+  const walls = document.querySelectorAll(".wall");
+  walls.forEach(function(wall) {
+    const wallLeft = wall.offsetLeft;
+    const wallRight = wall.offsetLeft + wall.offsetWidth;
+    const wallTop = wall.offsetTop;
+    const wallBottom = wall.offsetTop + wall.offsetHeight;
+
+    // プレイヤーと壁が重なるか？
+    if (
+      playerRight > wallLeft &&
+      playerLeft < wallRight &&
+      playerBottom > wallTop &&
+      playerTop < wallBottom
+    ) {
+      collision = true;
+    }
+  });
+
+  // 外側の枠からも出ないようにする
+  const game = document.getElementById("game");
+  if (
+    nextX < 0 ||
+    nextY < 0 ||
+    nextX + playerWidth > game.clientWidth ||
+    nextY + playerHeight > game.clientHeight
+  ) {
+    collision = true;
+  }
+
+  // 壁がなければ移動
+  if (!collision) {
+    x = nextX;
+    y = nextY;
+    player.style.left = x + "px";
+    player.style.top = y + "px";
+  } else {
+    // 壁に当たったら停止
+    dx = 0;
+    dy = 0;
+  }
   requestAnimationFrame(movePlayer);
 }
 
