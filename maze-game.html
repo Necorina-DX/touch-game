@@ -122,5 +122,83 @@ body {margin: 0; background: #111; color: white; font-family: Arial, sans-serif;
 
 </div>
 
+<script>
+
+const player = document.getElementById("player");
+
+let x = 40;
+let y = 40;
+
+let dx = 0;
+let dy = 0;
+
+const speed = 2;
+
+// ==========================
+// プレイヤーを動かす
+// ==========================
+
+function movePlayer() {
+  x += dx;
+  y += dy;
+  player.style.left = x + "px";
+  player.style.top = y + "px";
+  requestAnimationFrame(movePlayer);
+}
+
+movePlayer();
+
+// ==========================
+// スワイプを検出
+// ==========================
+
+let startX = 0;
+let startY = 0;
+
+document.addEventListener("pointerdown", function(e) {
+  startX = e.clientX;
+  startY = e.clientY;
+});
+
+document.addEventListener("pointerup", function(e) {
+  const diffX = e.clientX - startX;
+  const diffY = e.clientY - startY;
+
+  // 小さすぎる動きは無視
+  if (Math.abs(diffX) < 20 &&
+    Math.abs(diffY) < 20) {
+    return;
+  }
+
+
+  // 横方向のスワイプ
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    if (diffX > 0) {
+      // RIGHT
+      dx = speed;
+      dy = 0;
+    } else {
+      // LEFT
+      dx = -speed;
+      dy = 0;
+    }
+  }
+
+  // 縦方向のスワイプ
+  else {
+    if (diffY > 0) {
+      // DOWN
+      dx = 0;
+      dy = speed;
+    } else {
+      // UP
+      dx = 0;
+      dy = -speed;
+    }
+  }
+});
+
+</script>
+
 </body>
 </html>
