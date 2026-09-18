@@ -38,9 +38,7 @@ margin-top: 5px;
 }
 
 
-/* =========================
-ゲーム画面
-========================= */
+/* ゲーム画面 */
 
 #game {
 position: relative;
@@ -58,9 +56,7 @@ box-sizing: content-box;
 }
 
 
-/* =========================
-壁
-========================= */
+/* 壁 */
 
 .wall {
 position: absolute;
@@ -76,9 +72,7 @@ border: 2px solid black;
 }
 
 
-/* =========================
-ドット
-========================= */
+/* ドット */
 
 .dot {
 position: absolute;
@@ -94,9 +88,7 @@ transform: translate(-50%, -50%);
 }
 
 
-/* =========================
-プレイヤー
-========================= */
+/* プレイヤー */
 
 #player {
 position: absolute;
@@ -113,8 +105,8 @@ transform: translate(-50%, -50%);
 z-index: 10;
 
 transition:
-left 0.20s linear,
-top 0.20s linear;
+left 0.25s linear,
+top 0.25s linear;
 }
 
 </style>
@@ -161,13 +153,9 @@ document.getElementById("player");
 
 /* =========================
 迷路
-=========================
 
 0 = 通路
 1 = 壁
-
-7列 × 10行
-
 ========================= */
 
 const maze = [
@@ -266,8 +254,6 @@ let playerRow = 0;
 let playerCol = 0;
 
 
-/* プレイヤーを表示 */
-
 function drawPlayer() {
 
 player.style.left =
@@ -313,9 +299,7 @@ dot.remove();
 });
 
 
-/* =====================
-全部食べた？
-===================== */
+/* 全部食べた */
 
 if (
 document.querySelectorAll(".dot")
@@ -325,23 +309,21 @@ document.querySelectorAll(".dot")
 document.getElementById("title")
 .textContent = "CLEAR!";
 
-clearInterval(autoMoveTimer);
+stopGame();
 
 }
 
 }
 
-
-/* スタート地点のドットを食べる */
 
 eatDot();
 
 
 /* =========================
-1マス移動
+その方向へ進める？
 ========================= */
 
-function move(rowChange, colChange) {
+function canMove(rowChange, colChange) {
 
 const newRow =
 playerRow + rowChange;
@@ -350,9 +332,7 @@ const newCol =
 playerCol + colChange;
 
 
-/* =====================
-外には出ない
-===================== */
+/* 迷路の外 */
 
 if (
 newRow < 0 ||
@@ -366,9 +346,7 @@ return false;
 }
 
 
-/* =====================
-壁には入らない
-===================== */
+/* 壁 */
 
 if (maze[newRow][newCol] === 1) {
 
@@ -377,12 +355,26 @@ return false;
 }
 
 
-/* =====================
-移動
-===================== */
+return true;
 
-playerRow = newRow;
-playerCol = newCol;
+}
+
+
+/* =========================
+1マス移動
+========================= */
+
+function move(rowChange, colChange) {
+
+if (!canMove(rowChange, colChange)) {
+
+return false;
+
+}
+
+
+playerRow += rowChange;
+playerCol += colChange;
 
 drawPlayer();
 
@@ -394,59 +386,163 @@ return true;
 
 
 /* =========================
+現在の方向
+========================= */
+
+let currentRow = 0;
+let currentCol = 0;
+
+
+/* =========================
+予約した方向
+========================= */
+
+let nextRow = 0;
+let nextCol = 0;
+
+let hasNextDirection = false;
+
+
+/* =========================
 自動移動
 ========================= */
 
 let autoMoveTimer = null;
 
 
-function startMoving(rowChange, colChange) {
+/* ゲーム停止 */
 
-/* 今までの移動を停止 */
+function stopGame() {
 
 clearInterval(autoMoveTimer);
 
+autoMoveTimer = null;
 
-/* 最初の1マスを移動 */
+currentRow = 0;
+currentCol = 0;
 
-const moved =
-move(rowChange, colChange);
+}
 
 
-/* 最初から壁なら終了 */
+/* =========================
+自動移動の1ステップ
+========================= */
 
-if (!moved) {
+function autoMoveStep() {
+
+/*
+まず予約方向を確認
+
+曲がれるなら
+その方向へ変更
+*/
+
+if (
+hasNextDirection &&
+canMove(nextRow, nextCol)
+) {
+
+currentRow = nextRow;
+currentCol = nextCol;
+
+hasNextDirection = false;
+
+}
+
+
+/*
+現在方向へ進めるなら移動
+*/
+
+if (
+canMove(currentRow, currentCol)
+) {
+
+move(currentRow, currentCol);
 
 return;
 
 }
 
 
-/* =====================
-自動的に進み続ける
-===================== */
+/*
+現在方向が壁なら停止
 
-autoMoveTimer =
-setInterval(function() {
+ただし予約方向は残しておく
+*/
 
-const moved =
+clearInterval(autoMoveTimer);
+
+autoMoveTimer = null;
+
+}
+
+
+/* =========================
+最初の移動
+========================= */
+
+function startMoving(rowChange, colChange) {
+
+/*
+まだ動いていない場合
+*/
+
+if (autoMoveTimer === null) {
+
+/*
+その方向へ進めるならスタート
+*/
+
+if (canMove(rowChange, colChange)) {
+
+currentRow = rowChange;
+currentCol = colChange;
+
 move(
-rowChange,
-colChange
+currentRow,
+currentCol
 );
 
 
-/* 壁に当たったら停止 */
-
-if (!moved) {
-
-clearInterval(
-autoMoveTimer
+autoMoveTimer =
+setInterval(
+autoMoveStep,
+300
 );
 
 }
 
-}, 300);
+return;
+
+}
+
+
+/*
+すでに走っている場合
+
+新しい方向を予約
+*/
+
+nextRow = rowChange;
+nextCol = colChange;
+
+hasNextDirection = true;
+
+
+/*
+今すぐ曲がれるなら
+すぐ方向転換
+*/
+
+if (canMove(nextRow, nextCol)) {
+
+currentRow = nextRow;
+currentCol = nextCol;
+
+hasNextDirection = false;
+
+}
 
 }
 
@@ -481,9 +577,7 @@ const diffY =
 e.clientY - startY;
 
 
-/* =====================
-小さすぎる操作は無視
-===================== */
+/* 小さい操作は無視 */
 
 if (
 Math.abs(diffX) < 20 &&
@@ -495,9 +589,7 @@ return;
 }
 
 
-/* =====================
-左右
-===================== */
+/* 左右 */
 
 if (
 Math.abs(diffX) >
@@ -521,9 +613,7 @@ startMoving(0, -1);
 }
 
 
-/* =====================
-上下
-===================== */
+/* 上下 */
 
 else {
 
@@ -552,4 +642,5 @@ startMoving(-1, 0);
 </body>
 
 </html>
+
 
