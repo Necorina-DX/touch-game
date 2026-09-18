@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<title>Necorina Maze Game</title>
+
+<style>
+
+body {margin: 0; background: #111; color: white; font-family: Arial, sans-serif; text-align: center; touch-action: none;}
+
+/* 上部表示 */
+#info {height: 70px;padding-top: 10px;}
+
+#title {font-size: 22px;font-weight: bold;}
+
+#timer {font-size: 20px;margin-top: 5px;}
+
+/* ゲーム画面 */
+#game {position: relative;margin: auto;width: 350px;height: 500px;background: black;border: 4px solid #3366ff;box-sizing: border-box;}
+
+/* 壁 */
+.wall {position: absolute;background: #3366ff;}
+
+/* ドット */
+.dot {position: absolute;width: 8px;height: 8px;background: white;border-radius: 50%;}
+
+/* キャラクター */
+#player {position: absolute;width: 28px;height: 28px;background: orange;border-radius: 50%;left: 20px;top: 20px;z-index: 10;}
+
+</style>
+</head>
+
+
+<body>
+
+<div id="info">
+
+  <div id="title">
+    Necorina Maze
+  </div>
+
+  <div id="timer">
+    TIME: 0.0
+  </div>
+
+</div>
+
+<div id="game">
+
+  <!-- Player -->
+  <div id="player"></div>
+
+
+  <!-- Walls -->
+  <div class="wall"style="left:70px; top:0px;width:12px; height:160px;">
+  </div>
+
+  <div class="wall"style="left:150px; top:80px;width:12px; height:180px;">
+  </div>
+
+  <div class="wall"style="left:230px; top:0px;width:12px; height:160px;">
+  </div>
+
+  <div class="wall"style="left:70px; top:240px;width:170px; height:12px;">
+  </div>
+
+  <div class="wall"style="left:70px; top:330px;width:12px; height:170px;">
+  </div>
+
+  <div class="wall"style="left:230px; top:330px;width:12px; height:170px;">
+  </div>
+
+  <!-- Dots -->
+  <div class="dot"style="left:30px; top:80px;">
+  </div>
+
+  <div class="dot"style="left:30px; top:140px;">
+  </div>
+
+  <div class="dot"style="left:30px; top:200px;">
+  </div>
+
+  <div class="dot"style="left:30px; top:280px;">
+  </div>
+
+  <div class="dot"style="left:30px; top:360px;">
+  </div>
+
+  <div class="dot"style="left:30px; top:440px;">
+  </div>
+
+  <div class="dot"style="left:110px; top:40px;">
+  </div>
+
+  <div class="dot"style="left:190px; top:40px;">
+  </div>
+
+  <div class="dot"style="left:270px; top:40px;">
+  </div>
+
+  <div class="dot"style="left:110px; top:290px;">
+  </div>
+
+  <div class="dot"style="left:190px; top:290px;">
+  </div>
+
+  <div class="dot"style="left:270px; top:290px;">
+  </div>
+
+  <div class="dot"style="left:110px; top:400px;">
+  </div>
+
+  <div class="dot"style="left:190px; top:400px;">
+  </div>
+
+  <div class="dot"style="left:270px; top:400px;">
+  </div>
+
+</div>
+
+</body>
+</html>
