@@ -150,6 +150,64 @@ document.getElementById("game");
 const player =
 document.getElementById("player");
 
+/* =========================
+タイマー
+========================= */
+
+const timerDisplay =
+document.getElementById("timer");
+
+let startTime = null;
+let timerRunning = false;
+let timerAnimation = null;
+
+
+function startTimer() {
+
+if (timerRunning) {
+return;
+}
+
+startTime = performance.now();
+timerRunning = true;
+
+updateTimer();
+}
+
+
+function updateTimer() {
+
+if (!timerRunning) {
+return;
+}
+
+const elapsed =
+(performance.now() - startTime) / 1000;
+
+timerDisplay.textContent =
+"TIME: " + elapsed.toFixed(1);
+
+timerAnimation =
+requestAnimationFrame(updateTimer);
+}
+
+
+function stopTimer() {
+
+if (!timerRunning) {
+return;
+}
+
+timerRunning = false;
+
+cancelAnimationFrame(timerAnimation);
+
+const elapsed =
+(performance.now() - startTime) / 1000;
+
+timerDisplay.textContent =
+"TIME: " + elapsed.toFixed(1);
+}
 
 /* =========================
 迷路
@@ -308,7 +366,7 @@ document.querySelectorAll(".dot")
 
 document.getElementById("title")
 .textContent = "CLEAR!";
-
+stopTimer();
 stopGame();
 
 }
@@ -483,7 +541,7 @@ autoMoveTimer = null;
 ========================= */
 
 function startMoving(rowChange, colChange) {
-
+  startTimer();
 /*
 まだ動いていない場合
 */
