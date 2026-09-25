@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ML005KKF9Q"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+
+gtag('config', 'G-ML005KKF9Q');
+</script>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1.0,
+user-scalable=no">
+
+<title>Necorina Maze</title>
+
+<style>
+
+body {
+margin: 0;
+background: #111;
+color: white;
+font-family: Arial, sans-serif;
+text-align: center;
+touch-action: manipulation;
+}
+
+/* =========================
+上部表示
+========================= */
+
+#info {
+height: 80px;
+padding-top: 10px;
+}
+
+#title {
+font-size: 22px;
+font-weight: bold;
+}
+
+#timer {
+font-size: 20px;
+margin-top: 5px;
+}
+
+/* =========================
+ゲーム画面
+========================= */
+
+#game {
+position: relative;
+width: 350px;
+height: 450px;
+margin: auto;
+background: black;
+border: 4px solid #3366ff;
+box-sizing: content-box;
+}
+
+/* =========================
+壁
+========================= */
+
+.wall {
+position: absolute;
+width: 50px;
+height: 50px;
+background: #3366ff;
+box-sizing: border-box;
+border: 2px solid black;
+}
+
+/* =========================
+ドット
+========================= */
+
+.dot {
+position: absolute;
+width: 10px;
+height: 10px;
+background: white;
+border-radius: 50%;
+transform: translate(-50%, -50%);
+}
+
+/* =========================
+プレイヤー
+========================= */
+
+#player {
+position: absolute;
+width: 30px;
+height: 30px;
+background: orange;
+border-radius: 50%;
+transform: translate(-50%, -50%);
+z-index: 10;
+
+transition:
+left 0.25s linear,
+top 0.25s linear;
+}
+
+/* =========================
+敵
+========================= */
+
+#enemy {
+position: absolute;
+width: 30px;
+height: 30px;
+background: red;
+border-radius: 50%;
+transform: translate(-50%, -50%);
+z-index: 9;
+
+transition:
+left 0.25s linear,
+top 0.25s linear;
+}
+
+/* =========================
+十字キー
+========================= */
+
+#controls {
+margin-top: 15px;
+user-select: none;
+-webkit-user-select: none;
+}
+
+#up {
+display: block;
+margin: 0 auto 5px auto;
+}
+
+#control-row {
+display: flex;
+justify-content: center;
+gap: 5px;
+}
+
+.control-button {
+width: 70px;
+height: 55px;
+border: none;
+border-radius: 12px;
+background: #333;
+color: white;
+font-size: 28px;
+font-weight: bold;
+touch-action: manipulation;
+cursor: pointer;
+}
+
+.control-button:active {
+background: #666;
+transform: scale(0.95);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="info">
+
+<div id="title">
+Necorina Maze
+</div>
+
+<div id="timer">
+TIME: 0.0
+</div>
+
+</div>
+
+<div id="game">
+
+<div id="player"></div>
+
+<div id="enemy"></div>
+
+</div>
+
+<div id="controls">
+
+<button id="up"
+class="control-button">
+▲
+</button>
+
+<div id="control-row">
+
+<button id="left"
+class="control-button">
+◀
+</button>
+
+<button id="down"
+class="control-button">
+▼
+</button>
+
+<button id="right"
+class="control-button">
+▶
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================
+基本設定
+========================= */
+
+const cellSize = 50;
+
+const rows = 9;
+const cols = 7;
+
+const moveSpeed = 300;
+
+/* 敵の移動速度 */
+const enemySpeed = 400;
+
+
+const game =
+document.getElementById("game");
+
+const player =
+document.getElementById("player");
+
+const enemy =
+document.getElementById("enemy");
+
+const timerDisplay =
+document.getElementById("timer");
+
+const titleDisplay =
+document.getElementById("title");
+
+
+/* =========================
+ゲーム状態
+========================= */
+
+let gameFinished = false;
+
+
+/* =========================
+タイマー
+========================= */
+
+let startTime = null;
+
+let timerRunning = false;
+
+let timerAnimation = null;
+
+
+function startTimer() {
+
+if (timerRunning) {
+return;
+}
+
+startTime =
+performance.now();
+
+timerRunning = true;
+
+updateTimer();
+}
+
+
+function updateTimer() {
+
+if (!timerRunning) {
+return;
+}
+
+const elapsed =
+(performance.now() - startTime)
+/ 1000;
+
+timerDisplay.textContent =
+"TIME: "
++ elapsed.toFixed(1);
+
+timerAnimation =
+requestAnimationFrame(
+updateTimer
+);
+}
+
+
+function stopTimer() {
+
+if (!timerRunning) {
+return;
+}
+
+timerRunning = false;
+
+cancelAnimationFrame(
+timerAnimation
+);
+
+const elapsed =
+(performance.now() - startTime)
+/ 1000;
+
+timerDisplay.textContent =
+"TIME: "
++ elapsed.toFixed(1);
+}
+
+
+/* =========================
+迷路データ
+
+0 = 通路
+1 = 壁
+========================= */
+
+const maze = [
+
+[0,0,0,0,0,0,0],
+
+[0,1,0,1,0,1,0],
+
+[0,1,0,1,0,1,0],
+
+[0,0,0,0,0,0,0],
+
+[0,1,1,0,1,1,0],
+
+[0,0,0,0,0,0,0],
+
+[0,1,0,1,0,1,0],
+
+[0,1,0,1,0,1,0],
+
+[0,0,0,0,0,0,0]
+
+];
+
+
+/* =========================
+壁を作る
+========================= */
+
+for (
+let row = 0;
+row < rows;
+row++
+) {
+
+for (
+let col = 0;
+col < cols;
+col++
+) {
+
+if (
+maze[row][col] === 1
+) {
+
+const wall =
+document.createElement(
+"div"
+);
+
+wall.className =
+"wall";
+
+wall.style.left =
+(col * cellSize)
++ "px";
+
+wall.style.top =
+(row * cellSize)
++ "px";
+
+game.appendChild(
+wall
+);
+}
+}
+}
+
+
+/* =========================
+ドットを作る
+========================= */
+
+for (
+let row = 0;
+row < rows;
+row++
+) {
+
+for (
+let col = 0;
+col < cols;
+col++
+) {
+
+if (
+maze[row][col] === 0
+) {
+
+const dot =
+document.createElement(
+"div"
+);
+
+dot.className =
+"dot";
+
+dot.dataset.row =
+row;
+
+dot.dataset.col =
+col;
+
+dot.style.left =
+(
+col * cellSize
++ 25
+)
++ "px";
+
+dot.style.top =
+(
+row * cellSize
++ 25
+)
++ "px";
+
+game.appendChild(
+dot
+);
+}
+}
+}
+
+
+/* =========================
+プレイヤー
+========================= */
+
+let playerRow = 0;
+let playerCol = 0;
+
+
+function drawPlayer() {
+
+player.style.left =
+(
+playerCol * cellSize
++ 25
+)
++ "px";
+
+player.style.top =
+(
+playerRow * cellSize
++ 25
+)
++ "px";
+}
+
+
+drawPlayer();
+
+
+/* =========================
+敵
+
+右下からスタート
+========================= */
+
+let enemyRow = 8;
+let enemyCol = 6;
+
+let enemyTimer = null;
+
+
+function drawEnemy() {
+
+enemy.style.left =
+(
+enemyCol * cellSize
++ 25
+)
++ "px";
+
+enemy.style.top =
+(
+enemyRow * cellSize
++ 25
+)
++ "px";
+}
+
+
+drawEnemy();
+
+
+/* =========================
+ドットを食べる
+========================= */
+
+function eatDot() {
+
+const dots =
+document.querySelectorAll(
+".dot"
+);
+
+dots.forEach(
+function(dot) {
+
+const row =
+Number(
+dot.dataset.row
+);
+
+const col =
+Number(
+dot.dataset.col
+);
+
+if (
+row === playerRow &&
+col === playerCol
+) {
+
+dot.remove();
+}
+}
+);
+
+
+/* 全部食べたらクリア */
+
+if (
+document.querySelectorAll(
+".dot"
+).length === 0
+) {
+
+gameFinished = true;
+
+titleDisplay.textContent =
+"CLEAR!";
+
+stopTimer();
+
+stopGame();
+}
+}
+
+
+/* スタート地点のドットを消す */
+eatDot();
+
+
+/* =========================
+プレイヤーが移動可能か
+========================= */
+
+function canMove(
+rowChange,
+colChange
+) {
+
+const newRow =
+playerRow
++ rowChange;
+
+const newCol =
+playerCol
++ colChange;
+
+
+if (
+newRow < 0 ||
+newRow >= rows ||
+newCol < 0 ||
+newCol >= cols
+) {
+
+return false;
+}
+
+
+if (
+maze[newRow][newCol]
+=== 1
+) {
+
+return false;
+}
+
+
+return true;
+}
+
+
+/* =========================
+プレイヤー移動
+========================= */
+
+function move(
+rowChange,
+colChange
+) {
+
+if (gameFinished) {
+return false;
+}
+
+
+if (
+!canMove(
+rowChange,
+colChange
+)
+) {
+
+return false;
+}
+
+
+playerRow +=
+rowChange;
+
+playerCol +=
+colChange;
+
+
+drawPlayer();
+
+eatDot();
+
+checkEnemyCollision();
+
+
+return true;
+}
+
+
+/* =========================
+プレイヤー自動移動
+========================= */
+
+let currentRow = 0;
+let currentCol = 0;
+
+let nextRow = 0;
+let nextCol = 0;
+
+let hasNextDirection = false;
+
+let autoMoveTimer = null;
+
+
+function stopGame() {
+
+clearInterval(
+autoMoveTimer
+);
+
+autoMoveTimer = null;
+
+
+clearInterval(
+enemyTimer
+);
+
+enemyTimer = null;
+
+
+currentRow = 0;
+currentCol = 0;
+
+hasNextDirection = false;
+}
+
+
+function autoMoveStep() {
+
+if (gameFinished) {
+return;
+}
+
+
+if (
+hasNextDirection &&
+canMove(
+nextRow,
+nextCol
+)
+) {
+
+currentRow =
+nextRow;
+
+currentCol =
+nextCol;
+
+hasNextDirection =
+false;
+}
+
+
+if (
+canMove(
+currentRow,
+currentCol
+)
+) {
+
+move(
+currentRow,
+currentCol
+);
+
+return;
+}
+
+
+clearInterval(
+autoMoveTimer
+);
+
+autoMoveTimer = null;
+}
+
+
+/* =========================
+移動開始
+========================= */
+
+function startMoving(
+rowChange,
+colChange
+) {
+
+if (gameFinished) {
+return;
+}
+
+
+/*
+最初に移動できる方向を
+押したときだけゲーム開始
+*/
+
+if (
+!timerRunning &&
+canMove(
+rowChange,
+colChange
+)
+) {
+
+startTimer();
+
+startEnemy();
+}
+
+
+if (
+autoMoveTimer === null
+) {
+
+if (
+canMove(
+rowChange,
+colChange
+)
+) {
+
+currentRow =
+rowChange;
+
+currentCol =
+colChange;
+
+
+move(
+currentRow,
+currentCol
+);
+
+
+autoMoveTimer =
+setInterval(
+autoMoveStep,
+moveSpeed
+);
+}
+
+return;
+}
+
+
+/*
+先行入力
+*/
+
+nextRow =
+rowChange;
+
+nextCol =
+colChange;
+
+hasNextDirection =
+true;
+
+
+if (
+canMove(
+nextRow,
+nextCol
+)
+) {
+
+currentRow =
+nextRow;
+
+currentCol =
+nextCol;
+
+hasNextDirection =
+false;
+}
+}
+
+
+/* =========================
+敵が移動可能か
+========================= */
+
+function canEnemyMove(
+rowChange,
+colChange
+) {
+
+const newRow =
+enemyRow
++ rowChange;
+
+const newCol =
+enemyCol
++ colChange;
+
+
+if (
+newRow < 0 ||
+newRow >= rows ||
+newCol < 0 ||
+newCol >= cols
+) {
+
+return false;
+}
+
+
+if (
+maze[newRow][newCol]
+=== 1
+) {
+
+return false;
+}
+
+
+return true;
+}
+
+
+/* =========================
+敵をランダム移動
+========================= */
+
+function moveEnemy() {
+
+if (gameFinished) {
+return;
+}
+
+
+const directions = [
+
+{
+row: -1,
+col: 0
+},
+
+{
+row: 1,
+col: 0
+},
+
+{
+row: 0,
+col: -1
+},
+
+{
+row: 0,
+col: 1
+}
+
+];
+
+
+const possibleDirections =
+directions.filter(
+function(direction) {
+
+return canEnemyMove(
+direction.row,
+direction.col
+);
+}
+);
+
+
+if (
+possibleDirections.length
+=== 0
+) {
+
+return;
+}
+
+
+const randomIndex =
+Math.floor(
+Math.random()
+*
+possibleDirections.length
+);
+
+
+const direction =
+possibleDirections[
+randomIndex
+];
+
+
+enemyRow +=
+direction.row;
+
+enemyCol +=
+direction.col;
+
+
+drawEnemy();
+
+checkEnemyCollision();
+}
+
+
+/* =========================
+敵スタート
+========================= */
+
+function startEnemy() {
+
+if (
+enemyTimer !== null
+) {
+
+return;
+}
+
+
+enemyTimer =
+setInterval(
+moveEnemy,
+enemySpeed
+);
+}
+
+
+/* =========================
+敵との接触判定
+========================= */
+
+function checkEnemyCollision() {
+
+if (gameFinished) {
+return;
+}
+
+
+if (
+playerRow === enemyRow &&
+playerCol === enemyCol
+) {
+
+gameFinished = true;
+
+titleDisplay.textContent =
+"GAME OVER";
+
+stopTimer();
+
+stopGame();
+}
+}
+
+
+/* =========================
+十字キー
+========================= */
+
+document
+.getElementById("up")
+.addEventListener(
+"pointerdown",
+function(e) {
+
+e.preventDefault();
+
+startMoving(
+-1,
+0
+);
+}
+);
+
+
+document
+.getElementById("down")
+.addEventListener(
+"pointerdown",
+function(e) {
+
+e.preventDefault();
+
+startMoving(
+1,
+0
+);
+}
+);
+
+
+document
+.getElementById("left")
+.addEventListener(
+"pointerdown",
+function(e) {
+
+e.preventDefault();
+
+startMoving(
+0,
+-1
+);
+}
+);
+
+
+document
+.getElementById("right")
+.addEventListener(
+"pointerdown",
+function(e) {
+
+e.preventDefault();
+
+startMoving(
+0,
+1
+);
+}
+);
+
+
+</script>
+
+</body>
+
+</html>
