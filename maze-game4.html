@@ -167,6 +167,37 @@ background: #666;
 transform: scale(0.95);
 }
 
+/* =========================
+RETRY
+========================= */
+
+#retry-area {
+display: none;
+margin-top: 15px;
+}
+
+#retry-button {
+width: 150px;
+height: 55px;
+
+border: none;
+border-radius: 12px;
+
+background: #333;
+color: white;
+
+font-size: 20px;
+font-weight: bold;
+
+cursor: pointer;
+touch-action: manipulation;
+}
+
+#retry-button:active {
+background: #666;
+transform: scale(0.95);
+}
+
 </style>
 
 </head>
@@ -193,6 +224,14 @@ TIME: 0.0
 
 </div>
 
+<div id="retry-area">
+
+<button id="retry-button">
+RETRY
+</button>
+
+</div>
+  
 <div id="controls">
 
 <button id="up"
@@ -1014,7 +1053,6 @@ if (gameFinished) {
 return;
 }
 
-
 if (
 playerRow === enemyRow &&
 playerCol === enemyCol
@@ -1028,9 +1066,18 @@ titleDisplay.textContent =
 stopTimer();
 
 stopGame();
-}
-}
 
+/* 十字キーを隠す */
+document
+.getElementById("controls")
+.style.display = "none";
+
+/* RETRYボタンを表示 */
+document
+.getElementById("retry-area")
+.style.display = "block";
+}
+}
 
 /* =========================
 十字キー
@@ -1099,6 +1146,20 @@ startMoving(
 }
 );
 
+/* =========================
+RETRY
+========================= */
+
+document
+.getElementById("retry-button")
+.addEventListener(
+"click",
+function() {
+
+location.reload();
+
+}
+);
 
 </script>
 
